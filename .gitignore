@@ -8,8 +8,8 @@
 dir/**/*.node_modules
 
 /client/node_modules/
-/services/auth/node_modules
-/services/node_modules
+/services/auth/node_modules/
+
 
 ./env
 
