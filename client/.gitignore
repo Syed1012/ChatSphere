@@ -9,6 +9,8 @@ dir/**/*.node_modules
 
 ./.node_modules
 
+/services/auth/node_modules
+
 ./env
 
 dir/**/*.env.local
