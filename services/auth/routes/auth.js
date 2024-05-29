@@ -44,11 +44,9 @@ router.post("/register", async (req, res) => {
 
   // Check if firstName, lastName, and phoneNumber are not empty
   if (!firstName || !lastName || !email || !phoneNumber) {
-    return res
-      .status(400)
-      .json({
-        message: "First name, last name, email and phone number are required",
-      });
+    return res.status(400).json({
+      message: "First name, last name, email and phone number are required",
+    });
   }
 
   try {
@@ -79,7 +77,7 @@ router.post("/register", async (req, res) => {
     tempStorage[email] = { firstName, lastName, phoneNumber, otp };
 
     // Redirect to verify-otp page
-    res.redirect(`/verify-otp?email=${email}`);
+    res.redirect(`/verify-register-otp?email=${email}`);
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ message: "Server error" });
@@ -87,7 +85,7 @@ router.post("/register", async (req, res) => {
 });
 
 // User OTP verification route
-router.post("/verify-otp", async (req, res) => {
+router.post("/verify-register-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
@@ -143,7 +141,7 @@ router.post("/login", async (req, res) => {
 
     // Store OTP and expiration in user document
     user.loginOtp = otp;
-    user.loginOtpExpires = Date.now() + 3600000; // 1 hour expiration
+    user.loginOtpExpires = new Date(Date.now() + 3600000); // 1 hour expiration
     await user.save();
 
     res.json({ message: "OTP sent to your email" });
@@ -153,6 +151,41 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// User OTP verification for login route
+router.post("/verify-login-otp", async (req, res) => {
+  const { email, otp } = req.body;
 
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "Email not registered" });
+    }
+
+    if (
+      !user.loginOtp ||
+      user.loginOtp !== otp ||
+      user.loginOtpExpires < new Date()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    // Clear OTP and expiration
+    user.loginOtp = undefined;
+    user.loginOtpExpires = undefined;
+    await user.save();
+
+    // Generate JWT
+    const payload = { id: user.id, name: user.firstName };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    res.json({ token, user: { name: user.firstName, email: user.email } });
+  } catch (error) {
+    console.error("Error verifying OTP for login:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 export default router;

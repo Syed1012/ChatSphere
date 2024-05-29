@@ -8,8 +8,10 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   phoneNumber: { type: String, required: true },
-  otp: { type: String },
-  otpExpires: { type: Date },
+  registerOtp: { type: String },
+  registerOtpExpires: { type: Date },
+  loginOtp: { type: String },
+  loginOtpExpires: { type: Date },
 });
 
 const User = mongoose.model("User", userSchema);
