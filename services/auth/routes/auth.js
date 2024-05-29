@@ -119,31 +119,40 @@ router.post("/verify-otp", async (req, res) => {
 
 // User login route
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Email not registered" });
     }
 
-    // Verify password
-    const isMatch = bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Generate JWT
-    const payload = { id: user.id, name: user.firstName };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    // Generate OTP
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
     });
 
-    res.json({ token, user: { name: user.firstName, email: user.email } });
-  } catch (err) {
-    console.error(err);
+    // Send OTP via email
+    await transporter.sendMail({
+      from: process.env.EMAIL,
+      to: email,
+      subject: "Your OTP Code for login",
+      text: `Your OTP code is ${otp}.`,
+    });
+
+    // Store OTP and expiration in user document
+    user.loginOtp = otp;
+    user.loginOtpExpires = Date.now() + 3600000; // 1 hour expiration
+    await user.save();
+
+    res.json({ message: "OTP sent to your email" });
+  } catch (error) {
+    console.error("Error during login:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
 
 export default router;
