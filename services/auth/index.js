@@ -19,12 +19,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-
 // Route to check if the server is working
 app.get("/", (req, res) => {
   res.send("It's working");
 });
-
 
 // User registration and login routes
 app.use("/api/auth", authRoutes);
