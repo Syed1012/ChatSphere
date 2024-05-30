@@ -1,17 +1,23 @@
-// client/src/pages/_app.js
+// src/pages/_app.js
 
-import { ThemeProvider } from "@mui/material/styles";
-import  CssBaseline  from "@mui/material/CssBaseline";
-import theme from "@/styles/theme"; // doubt about @ as alias.
-import { AuthProvider } from "../../context/AuthContext";
-import '../styles/global.css'; 
+import React from "react";
+import Layout from "../app/layout";
+import "../styles/global.css";
+import { useRouter } from "next/router"; // Ensure router is imported
+import { useEffect } from "react"; // Ensure useEffect is imported
 
 function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Ensure router is loaded
+    if (!router.isReady) return;
+  }, [router.isReady]);
+
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <Layout>
       <Component {...pageProps} />
-    </ThemeProvider>
+    </Layout>
   );
 }
 
